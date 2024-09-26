@@ -10,10 +10,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-def create_driver():
-    options = Options()
-    options.add_argument("--headless")
-    myProxy = "172.28.0.3:9050"
+def test():
+    url = "https://www.google.com/"
+    # Use headless mode
+    options = webdriver.FirefoxOptions()
+    options.headless = True
+    myProxy = "127.0.0.1:9050"
     ip, port = myProxy.split(':')
     profile = webdriver.FirefoxProfile()
     profile.set_preference('network.proxy.type', 1)
@@ -21,19 +23,24 @@ def create_driver():
     profile.set_preference('network.proxy.socks_port', int(port))
     profile.set_preference('permissions.default.image', 2)
     options.profile = profile
-
-    # Selenium WebDriver URL pointing to the Firefox node container
-    selenium_url = "http://selenium_firefox_container:4444/wd/hub"
-
-    driver = webdriver.Remote(command_executor=selenium_url,options=options)
-    return driver
-
-def test():
-    driver = create_driver()
-    url="https://jo.opensooq.com/ar"
+    # Set the path of the Firefox binary
+    firefox_binary_path = "/usr/bin/firefox-esr"
+    options.binary_location = firefox_binary_path
+    
+    # Set the display port as an environment variable
+    display_port = os.environ.get("DISPLAY_PORT", "99")
+    display = f":{display_port}"
+    os.environ["DISPLAY"] = display
+    
+    # Start the Xvfb server
+    xvfb_cmd = f"Xvfb {display} -screen 0 1024x768x24 -nolisten tcp &"
+    os.system(xvfb_cmd)
+    
+    # Start the Firefox driver
+    driver = webdriver.Firefox(options=options)
+    
+    # Go to Google.com
     driver.get(url)
-    print(driver.page_source)
-    driver.quit()
 
 default_args = {
     'owner': 'moayad',
